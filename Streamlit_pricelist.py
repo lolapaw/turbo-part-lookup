@@ -18,6 +18,7 @@ st.markdown("""
         padding: 20px;
         border-radius: 10px;
         box-shadow: 0px 2px 6px rgba(0, 0, 0, 0.1);
+        margin-bottom: 20px;
     }
     @media (prefers-color-scheme: light) {
         .stApp {
@@ -52,16 +53,12 @@ df["PART #"] = df["PART #"].astype(str)
 df["INTERCHANGE"] = df["INTERCHANGE"].fillna("").astype(str)
 
 # Search by part number or interchange
-def find_part(part_number):
+def find_all_matches(part_number):
     part_number = part_number.strip()
-    match = df[df["PART #"] == part_number]
-    if not match.empty:
-        return match.iloc[0]
-    for _, row in df.iterrows():
-        interchange_list = [x.strip() for x in row["INTERCHANGE"].split(",")]
-        if part_number in interchange_list:
-            return row
-    return None
+    direct_matches = df[df["PART #"] == part_number]
+    interchange_matches = df[df["INTERCHANGE"].str.contains(part_number, na=False)]
+    combined = pd.concat([direct_matches, interchange_matches]).drop_duplicates()
+    return combined
 
 # User Interface
 st.markdown("<div class='title-text'>🔍 Turbocharger Part Lookup</div>", unsafe_allow_html=True)
@@ -69,18 +66,19 @@ st.markdown("<div class='title-text'>🔍 Turbocharger Part Lookup</div>", unsaf
 part_number = st.text_input("Enter a part number:")
 
 if part_number:
-    result = find_part(part_number)
-    if result is not None:
-        st.markdown("<div class='result-box'>", unsafe_allow_html=True)
-        st.markdown(f"**Part #:** {result['PART #']}")
-        st.markdown(f"**Brand:** {result['BRAND']}")
-        st.markdown(f"**Manufacturer:** {result['MANUFACTURER']}")
-        st.markdown(f"**Description:**\n{result['DESCRIPTION']}")
-        st.markdown(f"**Interchange:** {result['INTERCHANGE']}")
-        st.markdown(f"**Retail Price:** ${result['RETAIL PRICE']}")
-        st.markdown(f"**Dealer Price:** ${result['DEALER PRICE']}")
-        st.markdown(f"**Core Charge:** ${result['CORE']}")
-        st.markdown("</div>", unsafe_allow_html=True)
+    results = find_all_matches(part_number)
+    if not results.empty:
+        for _, result in results.iterrows():
+            st.markdown("<div class='result-box'>", unsafe_allow_html=True)
+            st.markdown(f"**Part #:** {result['PART #']}")
+            st.markdown(f"**Brand:** {result['BRAND']}")
+            st.markdown(f"**Manufacturer:** {result['MANUFACTURER']}")
+            st.markdown(f"**Description:**\n{result['DESCRIPTION']}")
+            st.markdown(f"**Interchange:** {result['INTERCHANGE']}")
+            st.markdown(f"**Retail Price:** ${result['RETAIL PRICE']}")
+            st.markdown(f"**Dealer Price:** ${result['DEALER PRICE']}")
+            st.markdown(f"**Core Charge:** ${result['CORE']}")
+            st.markdown("</div>", unsafe_allow_html=True)
     else:
         st.error("Part not found.")
 
