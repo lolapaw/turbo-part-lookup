@@ -1,17 +1,37 @@
-import pandas as pd
 import streamlit as st
+import pandas as pd
 import streamlit_authenticator as stauth
+import yaml
+from yaml.loader import SafeLoader
 
-# Use already hashed password
-names = ["Admin"]
-usernames = ["admin"]
-# Hashed password for "turbo123"
-hashed_passwords = ["$2b$12$eIXPTd5D5T0Z7l9jFoyLXeJGBS5fUxeEKDRuKIPYXu6zFSVMIxTFG"]
+# --- CONFIG ---
+config = {
+    'credentials': {
+        'usernames': {
+            'admin': {
+                'name': 'Admin',
+                'password': '$2b$12$eIXPTd5D5T0Z7l9jFoyLXeJGBS5fUxeEKDRuKIPYXu6zFSVMIxTFG'  # turbo123
+            }
+        }
+    },
+    'cookie': {
+        'name': 'part_lookup_app',
+        'key': 'abcdef',
+        'expiry_days': 30
+    },
+    'preauthorized': {
+        'emails': []
+    }
+}
 
-authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
-                                     "part_lookup_app", "abcdef", cookie_expiry_days=30)
+authenticator = stauth.Authenticate(
+    config['credentials'],
+    config['cookie']['name'],
+    config['cookie']['key'],
+    config['cookie']['expiry_days']
+)
 
-name, authentication_status, username = authenticator.login("Login", "main")
+name, authentication_status, username = authenticator.login('Login', 'main')
 
 if authentication_status:
     st.set_page_config(page_title="Turbo Lookup", page_icon="🔧", layout="centered")
