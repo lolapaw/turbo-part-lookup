@@ -51,6 +51,9 @@ df = pd.read_excel(file_path, skiprows=1)
 df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RETAIL PRICE", "DEALER PRICE", "CORE"]
 df["PART #"] = df["PART #"].astype(str)
 df["INTERCHANGE"] = df["INTERCHANGE"].fillna("").astype(str)
+df["DESCRIPTION"] = df["DESCRIPTION"].fillna("").astype(str)
+df["BRAND"] = df["BRAND"].fillna("").astype(str)
+df["MANUFACTURER"] = df["MANUFACTURER"].fillna("").astype(str)
 
 # Search by part number or interchange
 def find_all_matches(part_number):
@@ -60,27 +63,43 @@ def find_all_matches(part_number):
     combined = pd.concat([direct_matches, interchange_matches]).drop_duplicates()
     return combined
 
+# Search by keywords
+def keyword_search(query):
+    query = query.lower().strip()
+    if not query:
+        return pd.DataFrame()
+    keywords = query.split()
+    mask = df.apply(lambda row: all(
+        any(kw in str(row[col]).lower() for col in ["DESCRIPTION", "BRAND", "MANUFACTURER"])
+        for kw in keywords), axis=1)
+    return df[mask]
+
 # User Interface
 st.markdown("<div class='title-text'>🔍 Turbocharger Part Lookup</div>", unsafe_allow_html=True)
 
 part_number = st.text_input("Enter a part number:")
+keyword_input = st.text_input("Or search by keywords (e.g., 'Cummins X15', 'Detroit S60'):")
 
+results = pd.DataFrame()
 if part_number:
     results = find_all_matches(part_number)
-    if not results.empty:
-        for _, result in results.iterrows():
-            st.markdown("<div class='result-box'>", unsafe_allow_html=True)
-            st.markdown(f"**Part #:** {result['PART #']}")
-            st.markdown(f"**Brand:** {result['BRAND']}")
-            st.markdown(f"**Manufacturer:** {result['MANUFACTURER']}")
-            st.markdown(f"**Description:**\n{result['DESCRIPTION']}")
-            st.markdown(f"**Interchange:** {result['INTERCHANGE']}")
-            st.markdown(f"**Retail Price:** ${result['RETAIL PRICE']}")
-            st.markdown(f"**Dealer Price:** ${result['DEALER PRICE']}")
-            st.markdown(f"**Core Charge:** ${result['CORE']}")
-            st.markdown("</div>", unsafe_allow_html=True)
-    else:
-        st.error("Part not found.")
+elif keyword_input:
+    results = keyword_search(keyword_input)
+
+if not results.empty:
+    for _, result in results.iterrows():
+        st.markdown("<div class='result-box'>", unsafe_allow_html=True)
+        st.markdown(f"**Part #:** {result['PART #']}")
+        st.markdown(f"**Brand:** {result['BRAND']}")
+        st.markdown(f"**Manufacturer:** {result['MANUFACTURER']}")
+        st.markdown(f"**Description:**\n{result['DESCRIPTION']}")
+        st.markdown(f"**Interchange:** {result['INTERCHANGE']}")
+        st.markdown(f"**Retail Price:** ${result['RETAIL PRICE']}")
+        st.markdown(f"**Dealer Price:** ${result['DEALER PRICE']}")
+        st.markdown(f"**Core Charge:** ${result['CORE']}")
+        st.markdown("</div>", unsafe_allow_html=True)
+elif part_number or keyword_input:
+    st.error("No matching parts found.")
 
 # Footer
 st.markdown(
