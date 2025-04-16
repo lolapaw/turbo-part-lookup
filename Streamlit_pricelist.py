@@ -47,7 +47,7 @@ st.markdown("""
 # Load Excel file
 file_path = "Prices (1).xlsx"
 df = pd.read_excel(file_path, skiprows=1)
-df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RETAIL PRICE", "DEALER PRICE"]
+df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RETAIL PRICE", "DEALER PRICE", "CORE"]
 df["PART #"] = df["PART #"].astype(str)
 df["INTERCHANGE"] = df["INTERCHANGE"].fillna("").astype(str)
 
@@ -79,6 +79,7 @@ if part_number:
         st.markdown(f"**Interchange:** {result['INTERCHANGE']}")
         st.markdown(f"**Retail Price:** ${result['RETAIL PRICE']}")
         st.markdown(f"**Dealer Price:** ${result['DEALER PRICE']}")
+        st.markdown(f"**Core Charge:** ${result['CORE']}")
         st.markdown("</div>", unsafe_allow_html=True)
     else:
         st.error("Part not found.")
