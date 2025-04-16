@@ -2,12 +2,12 @@ import pandas as pd
 import streamlit as st
 import streamlit_authenticator as stauth
 
-# --- Authentication ---
+# Use already hashed password
 names = ["Admin"]
 usernames = ["admin"]
-passwords = ["turbo123"]
+# Hashed password for "turbo123"
+hashed_passwords = ["$2b$12$eIXPTd5D5T0Z7l9jFoyLXeJGBS5fUxeEKDRuKIPYXu6zFSVMIxTFG"]
 
-hashed_passwords = stauth.Hasher(passwords).generate()
 authenticator = stauth.Authenticate(names, usernames, hashed_passwords,
                                      "part_lookup_app", "abcdef", cookie_expiry_days=30)
 
