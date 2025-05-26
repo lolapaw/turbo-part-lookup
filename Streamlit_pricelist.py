@@ -48,7 +48,7 @@ st.markdown("""
 # Load Excel file
 file_path = "Prices (1).xlsx"
 df = pd.read_excel(file_path, skiprows=1)
-df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RETAIL PRICE", "DEALER PRICE", "CORE", "INVENTORY"]
+df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RRP without Actuator", "RRP with Actuator", "DEALER PRICE", "CORE", "INVENTORY"]
 df["PART #"] = df["PART #"].astype(str)
 df["INTERCHANGE"] = df["INTERCHANGE"].fillna("").astype(str)
 df["DESCRIPTION"] = df["DESCRIPTION"].fillna("").astype(str)
@@ -94,7 +94,8 @@ if not results.empty:
         st.markdown(f"**Manufacturer:** {result['MANUFACTURER']}")
         st.markdown(f"**Description:**\n{result['DESCRIPTION']}")
         st.markdown(f"**Interchange:** {result['INTERCHANGE']}")
-        st.markdown(f"**Retail Price:** ${result['RETAIL PRICE']}")
+        st.markdown(f"**RRP without Actuator:** ${result['RRP without Actuator']}")
+        st.markdown(f"**RRP with Actuator:** ${result['RRP with Actuator']}")
         st.markdown(f"**Dealer Price:** ${result['DEALER PRICE']}")
         st.markdown(f"**Core Charge:** ${result['CORE']}")
         st.markdown(f"**Inventory:** {result['INVENTORY']}")
