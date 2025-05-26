@@ -45,49 +45,69 @@ st.markdown("""
     </style>
 """, unsafe_allow_html=True)
 
-# Load Excel file
+# Load turbo data
 file_path = "Prices (1).xlsx"
-df = pd.read_excel(file_path, skiprows=1)
-df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RRP without Actuator", "RRP with Actuator", "DEALER PRICE", "CORE", "INVENTORY"]
-df["PART #"] = df["PART #"].astype(str)
-df["INTERCHANGE"] = df["INTERCHANGE"].fillna("").astype(str)
-df["DESCRIPTION"] = df["DESCRIPTION"].fillna("").astype(str)
-df["BRAND"] = df["BRAND"].fillna("").astype(str)
-df["MANUFACTURER"] = df["MANUFACTURER"].fillna("").astype(str)
+turbo_df = pd.read_excel(file_path, skiprows=1)
+turbo_df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RRP without Actuator", "RRP with Actuator", "DEALER PRICE", "CORE", "INVENTORY"]
+turbo_df["PART #"] = turbo_df["PART #"].astype(str)
+turbo_df["INTERCHANGE"] = turbo_df["INTERCHANGE"].fillna("").astype(str)
+turbo_df["DESCRIPTION"] = turbo_df["DESCRIPTION"].fillna("").astype(str)
+turbo_df["BRAND"] = turbo_df["BRAND"].fillna("").astype(str)
+turbo_df["MANUFACTURER"] = turbo_df["MANUFACTURER"].fillna("").astype(str)
 
-# Search by part number or interchange
+# Load actuator data
+actuator_df = pd.read_excel("Actuators_price list.xlsx", skiprows=1)
+actuator_df.columns = ["PART #", "YEARS", "TURBO MODEL", "APPLICATION", "INTERCHANGE", "PRICE", "DEALER PRICE", "CORE"]
+actuator_df = actuator_df.fillna("")
+actuator_df["PART #"] = actuator_df["PART #"].astype(str)
+actuator_df["INTERCHANGE"] = actuator_df["INTERCHANGE"].astype(str)
+
+# Search by part number
 def find_all_matches(part_number):
     part_number = part_number.strip()
-    direct_matches = df[df["PART #"] == part_number]
-    interchange_matches = df[df["INTERCHANGE"].str.contains(part_number, na=False)]
-    combined = pd.concat([direct_matches, interchange_matches]).drop_duplicates()
-    return combined
+    t_direct = turbo_df[turbo_df["PART #"] == part_number]
+    t_inter = turbo_df[turbo_df["INTERCHANGE"].str.contains(part_number, na=False)]
+    a_direct = actuator_df[actuator_df["PART #"] == part_number]
+    a_inter = actuator_df[actuator_df["INTERCHANGE"].str.contains(part_number, na=False)]
+    turbo_results = pd.concat([t_direct, t_inter]).drop_duplicates()
+    actuator_results = pd.concat([a_direct, a_inter]).drop_duplicates()
+    return turbo_results, actuator_results
 
-# Search by keywords
+# Keyword search
 def keyword_search(query):
     query = query.lower().strip()
     if not query:
-        return pd.DataFrame()
+        return pd.DataFrame(), pd.DataFrame()
     keywords = query.split()
-    mask = df.apply(lambda row: all(
+    t_mask = turbo_df.apply(lambda row: all(
         any(kw in str(row[col]).lower() for col in ["DESCRIPTION", "BRAND", "MANUFACTURER"])
         for kw in keywords), axis=1)
-    return df[mask]
+    a_mask = actuator_df.apply(lambda row: all(
+        any(kw in str(row[col]).lower() for col in ["APPLICATION", "TURBO MODEL"])
+        for kw in keywords), axis=1)
+    return turbo_df[t_mask], actuator_df[a_mask]
 
-# User Interface
-st.markdown("<div class='title-text'>🔍 Turbocharger Part Lookup</div>", unsafe_allow_html=True)
+# UI
+st.markdown("<div class='title-text'>🔍 Turbo & Actuator Lookup</div>", unsafe_allow_html=True)
 
+filter_choice = st.radio("Select category:", ["All", "Turbochargers only", "Actuators only"])
 part_number = st.text_input("Enter a part number:")
-keyword_input = st.text_input("Or search by keywords (e.g., 'Cummins X15', 'Detroit S60'):")
+keyword_input = st.text_input("Or search by keywords (e.g., 'Cummins X15', 'HE400VG'):")
 
-results = pd.DataFrame()
+results_turbo, results_actuator = pd.DataFrame(), pd.DataFrame()
 if part_number:
-    results = find_all_matches(part_number)
+    results_turbo, results_actuator = find_all_matches(part_number)
 elif keyword_input:
-    results = keyword_search(keyword_input)
+    results_turbo, results_actuator = keyword_search(keyword_input)
 
-if not results.empty:
-    for _, result in results.iterrows():
+if filter_choice == "Turbochargers only":
+    results_actuator = pd.DataFrame()
+elif filter_choice == "Actuators only":
+    results_turbo = pd.DataFrame()
+
+if not results_turbo.empty:
+    st.subheader("🌀 Turbochargers")
+    for _, result in results_turbo.iterrows():
         st.markdown("<div class='result-box'>", unsafe_allow_html=True)
         st.markdown(f"**Part #:** {result['PART #']}")
         st.markdown(f"**Brand:** {result['BRAND']}")
@@ -100,7 +120,22 @@ if not results.empty:
         st.markdown(f"**Core Charge:** ${result['CORE']}")
         st.markdown(f"**Inventory:** {result['INVENTORY']}")
         st.markdown("</div>", unsafe_allow_html=True)
-elif part_number or keyword_input:
+
+if not results_actuator.empty:
+    st.subheader("⚙️ Actuators")
+    for _, row in results_actuator.iterrows():
+        st.markdown("<div class='result-box'>", unsafe_allow_html=True)
+        st.markdown(f"**Part #:** {row['PART #']}")
+        st.markdown(f"**Years:** {row['YEARS']}")
+        st.markdown(f"**Turbo Model:** {row['TURBO MODEL']}")
+        st.markdown(f"**Application:** {row['APPLICATION']}")
+        st.markdown(f"**Interchange:** {row['INTERCHANGE']}")
+        st.markdown(f"**Price:** {row['PRICE']}")
+        st.markdown(f"**Dealer Price:** {row['DEALER PRICE']}")
+        st.markdown(f"**Core Charge:** {row['CORE']}")
+        st.markdown("</div>", unsafe_allow_html=True)
+
+if results_turbo.empty and results_actuator.empty and (part_number or keyword_input):
     st.error("No matching parts found.")
 
 # Footer
