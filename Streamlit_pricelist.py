@@ -7,7 +7,7 @@ st.set_page_config(page_title="Turbo Lookup", page_icon="🔧", layout="centered
 # Airtable setup for Turbochargers
 AIRTABLE_TOKEN = "patXLEv6CLjVl6xYx.ff31913713df2ff59b0587e5215745174ddb298cff0eff0ac164364f4a9f2404"
 BASE_ID = "appPn5AJmm53x5RXc"
-TURBO_TABLE = "Turbo inventory"
+TURBO_TABLE = "Inventory Turbo"
 turbo_table = Table(AIRTABLE_TOKEN, BASE_ID, TURBO_TABLE)
 turbo_records = turbo_table.all()
 turbo_df = pd.DataFrame([rec["fields"] for rec in turbo_records]).fillna("")
