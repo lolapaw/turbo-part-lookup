@@ -10,15 +10,20 @@ BASE_ID = "appPn5AJmm53x5RXc"
 TURBO_TABLE = "Inventory Turbo"
 turbo_table = Table(AIRTABLE_TOKEN, BASE_ID, TURBO_TABLE)
 turbo_records = turbo_table.all()
-turbo_df = pd.DataFrame([rec["fields"] for rec in turbo_records]).fillna("")
+turbo_df = pd.DataFrame([
+    {**rec["fields"], "PART #": rec["fields"].get("PART #", rec.get("fields", {}).get("Name", ""))} 
+    for rec in turbo_records
+]).fillna("")
 
 # Load Actuator Data from Excel
 actuator_df = pd.read_excel("Actuators_price list.xlsx", skiprows=0).fillna("")
 
 # Normalize
 for df in [turbo_df, actuator_df]:
-    df["PART #"] = df["PART #"].astype(str)
-    df["INTERCHANGE"] = df["INTERCHANGE"].astype(str)
+    if "PART #" in df.columns:
+        df["PART #"] = df["PART #"].astype(str)
+    if "INTERCHANGE" in df.columns:
+        df["INTERCHANGE"] = df["INTERCHANGE"].astype(str)
 
 # Search functions
 def find_all_matches(part_number):
