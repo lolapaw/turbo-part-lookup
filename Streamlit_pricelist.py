@@ -48,7 +48,7 @@ st.markdown("""
 # Load turbo data
 file_path = "Prices (1).xlsx"
 turbo_df = pd.read_excel(file_path, skiprows=1)
-turbo_df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RRP without Actuator", "RRP with Actuator", "DEALER PRICE", "CORE", "INVENTORY"]
+turbo_df.columns = ["PART #", "BRAND", "MANUFACTURER", "DESCRIPTION", "INTERCHANGE", "RRP without Actuator", "RRP with Actuator", "DEALER PRICE without actuator", "DEALER PRICE with actuator", "CORE", "INVENTORY"]
 turbo_df["PART #"] = turbo_df["PART #"].astype(str)
 turbo_df["INTERCHANGE"] = turbo_df["INTERCHANGE"].fillna("").astype(str)
 turbo_df["DESCRIPTION"] = turbo_df["DESCRIPTION"].fillna("").astype(str)
@@ -116,7 +116,8 @@ if not results_turbo.empty:
         st.markdown(f"**Interchange:** {result['INTERCHANGE']}")
         st.markdown(f"**RRP without Actuator:** {result['RRP without Actuator']}")
         st.markdown(f"**RRP with Actuator:** {result['RRP with Actuator']}")
-        st.markdown(f"**Dealer Price:** {result['DEALER PRICE']}")
+        st.markdown(f"**Dealer Price without actuator:** {result['DEALER PRICE without actuator']}")
+        st.markdown(f"**Dealer Price with actuator:** {result['DEALER PRICE with actuator']}")
         st.markdown(f"**Core Charge:** {result['CORE']}")
         st.markdown(f"**Inventory:** {result['INVENTORY']}")
         st.markdown("</div>", unsafe_allow_html=True)
@@ -146,3 +147,4 @@ st.markdown(
     "</div>",
     unsafe_allow_html=True
 )
+
